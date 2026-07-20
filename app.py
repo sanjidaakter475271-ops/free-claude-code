@@ -8,19 +8,30 @@ SRC_DIR = os.path.join(os.path.dirname(__file__), "src")
 if SRC_DIR not in sys.path:
     sys.path.insert(0, SRC_DIR)
 
-# DO NOT add smoke/lib to path - it has http.py that conflicts with Python's built-in http module
-
 # Try to import from src/free_claude_code directly
 try:
     from free_claude_code.api.app import create_app
     from free_claude_code.api.ports import ApiServices
-    from dataclasses import dataclass
+    from dataclasses import dataclass, field
+    from typing import Any, Optional
 
     @dataclass
     class MockRequestRuntime:
         def current_settings(self):
             class Settings:
                 log_api_error_tracebacks = False
+                # Add all required settings attributes
+                anthropic_auth_token = os.environ.get("ANTHROPIC_API_KEY", "")
+                openai_api_key = os.environ.get("OPENAI_API_KEY", "")
+                gemini_api_key = os.environ.get("GEMINI_API_KEY", "")
+                default_model = os.environ.get("DEFAULT_MODEL", "claude-sonnet-4-20250514")
+                max_tokens = int(os.environ.get("MAX_TOKENS", "8192"))
+                temperature = float(os.environ.get("TEMPERATURE", "0.7"))
+
+                # Add any other settings attributes that might be needed
+                def __getattr__(self, name):
+                    return os.environ.get(name.upper(), "")
+
             return Settings()
 
     @dataclass  

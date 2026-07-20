@@ -1,5 +1,5 @@
-# Use Python 3.11
-FROM python:3.11-slim
+# Use Python 3.14 (free-claude-code requires >=3.14.0)
+FROM python:3.14-slim
 
 WORKDIR /app
 

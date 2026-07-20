@@ -42,6 +42,13 @@ RUN find /app/src -name "*.py" -exec sed -i \
 # Add src to Python path
 ENV PYTHONPATH=/app/src:$PYTHONPATH
 
+# Use port 7860 (as configured in Railway)
+ENV PORT=7860
 EXPOSE 7860
+
+# Check if app.py exists, if not create a simple one
+RUN if [ ! -f /app/app.py ]; then \
+    echo "import sys; import os; SRC_DIR = os.path.join(os.path.dirname(__file__), \"src\"); sys.path.insert(0, SRC_DIR); from free_claude_code.api.app import app as fastapi_app; import uvicorn; port = int(os.environ.get(\"PORT\", 7860)); uvicorn.run(fastapi_app, host=\"0.0.0.0\", port=port)" > /app/app.py; \
+    fi
 
 CMD ["python", "app.py"]

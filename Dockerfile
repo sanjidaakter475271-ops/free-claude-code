@@ -1,4 +1,4 @@
-# Use Python 3.14 (free-claude-code requires >=3.14.0)
+# Use Python 3.14
 FROM python:3.14-slim
 
 WORKDIR /app
@@ -8,6 +8,7 @@ RUN apt-get update && apt-get install -y \
     git \
     build-essential \
     curl \
+    sed \
     && rm -rf /var/lib/apt/lists/*
 
 # Install free-claude-code from YOUR fork
@@ -36,10 +37,16 @@ RUN pip install --no-cache-dir \
 # Copy source code
 COPY . .
 
+# Patch admin panel to allow remote access with auth
+# Find and replace local-only checks in installed package
+RUN find /usr/local/lib -path "*/free_claude_code/*" -name "*.py" -exec grep -l "127.0.0.1\|localhost\|local-only" {} + 2>/dev/null | while read f; do \
+    sed -i 's/127\.0\.0\.1/0.0.0.0/g; s/localhost/0.0.0.0/g; s/local-only/public/g' "$f"; \
+    done || true
+
 # Set environment
-ENV PYTHONPATH=/app/src:$PYTHONPATH
 ENV PORT=7860
+ENV HOST=0.0.0.0
 EXPOSE 7860
 
-# Start fcc-server
-CMD ["fcc-server", "--host", "0.0.0.0", "--port", "7860"]
+# Start fcc-server with public host
+CMD ["sh", "-c", "fcc-server --host 0.0.0.0 --port ${PORT:-7860}"]

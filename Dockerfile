@@ -24,7 +24,10 @@ RUN pip install --no-cache-dir \
     anthropic \
     openai \
     aiohttp \
-    tenacity
+    tenacity \
+    jsonschema \
+    jinja2 \
+    starlette
 
 # Copy source code
 COPY . .
@@ -42,7 +45,7 @@ RUN find /app/src -name "*.py" -exec sed -i \
 # Add src to Python path
 ENV PYTHONPATH=/app/src:$PYTHONPATH
 
-# Use port 7860 (as configured in Railway)
+# Use port 7860
 ENV PORT=7860
 EXPOSE 7860
 

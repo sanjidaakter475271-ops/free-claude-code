@@ -1,4 +1,4 @@
-# Use Python 3.11 to avoid StrEnum and forward reference issues
+# Use Python 3.11
 FROM python:3.11-slim
 
 WORKDIR /app
@@ -7,10 +7,14 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y \
     git \
     build-essential \
-    sed \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Python dependencies directly (no requirements.txt needed)
+# Install free-claude-code from GitHub
+RUN pip install --no-cache-dir \
+    git+https://github.com/Alshahryar1/free-claude-code.git
+
+# Install additional dependencies
 RUN pip install --no-cache-dir \
     fastapi \
     uvicorn \
@@ -29,29 +33,13 @@ RUN pip install --no-cache-dir \
     jinja2 \
     starlette
 
-# Copy source code
+# Copy source code (if needed)
 COPY . .
 
-# ========== AUTO FIX ALL PYTHON COMPATIBILITY ISSUES ==========
-
-# Fix 1: Add "from __future__ import annotations" to all Python files in src/
-RUN find /app/src -name "*.py" -exec sh -c \
-    'echo "from __future__ import annotations" | cat - "$1" > /tmp/tmpfile && mv /tmp/tmpfile "$1"' _ {} \;
-
-# Fix 2: Fix Python 2 except syntax: "except A, B:" → "except (A, B):"
-RUN find /app/src -name "*.py" -exec sed -i \
-    's/except \([A-Za-z_][A-Za-z0-9_]*\), \([A-Za-z_][A-Za-z0-9_]*\):/except (\1, \2):/g' {} +
-
-# Add src to Python path
+# Set environment
 ENV PYTHONPATH=/app/src:$PYTHONPATH
-
-# Use port 7860
 ENV PORT=7860
 EXPOSE 7860
 
-# Check if app.py exists, if not create a simple one
-RUN if [ ! -f /app/app.py ]; then \
-    echo "import sys; import os; SRC_DIR = os.path.join(os.path.dirname(__file__), \"src\"); sys.path.insert(0, SRC_DIR); from free_claude_code.api.app import app as fastapi_app; import uvicorn; port = int(os.environ.get(\"PORT\", 7860)); uvicorn.run(fastapi_app, host=\"0.0.0.0\", port=port)" > /app/app.py; \
-    fi
-
-CMD ["python", "app.py"]
+# Start fcc-server
+CMD ["fcc-server", "--host", "0.0.0.0", "--port", "7860"]

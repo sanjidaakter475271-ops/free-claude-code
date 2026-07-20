@@ -10,9 +10,9 @@ RUN apt-get update && apt-get install -y \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Install free-claude-code from GitHub
+# Install free-claude-code from YOUR fork
 RUN pip install --no-cache-dir \
-    git+https://github.com/Alshahryar1/free-claude-code.git
+    git+https://github.com/sanjidaakter475271-ops/free-claude-code.git
 
 # Install additional dependencies
 RUN pip install --no-cache-dir \
@@ -33,7 +33,7 @@ RUN pip install --no-cache-dir \
     jinja2 \
     starlette
 
-# Copy source code (if needed)
+# Copy source code
 COPY . .
 
 # Set environment
